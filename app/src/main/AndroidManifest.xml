@@ -16,7 +16,12 @@
         android:theme="@style/Theme.ProjectManageApp"
         tools:targetApi="31">
         <activity
+            android:name=".activities.TaskListActivity"
+            android:screenOrientation="portrait"
+            android:exported="false" />
+        <activity
             android:name=".activities.CreateBoardActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
             android:name=".activities.MyProfileActivity"

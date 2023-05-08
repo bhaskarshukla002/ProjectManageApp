@@ -6,14 +6,22 @@ import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
+import android.view.View
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.projectmanageapp.R
+import com.example.projectmanageapp.adapter.BoardItemsAdapter
 import com.example.projectmanageapp.databinding.ActivityMainBinding
+import com.example.projectmanageapp.databinding.ContentMainBinding
+import com.example.projectmanageapp.databinding.NavHeaderMainBinding
 import com.example.projectmanageapp.firebase.FireStoreClass
+import com.example.projectmanageapp.models.Board
 import com.example.projectmanageapp.models.User
 import com.example.projectmanageapp.utils.Constants
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -24,38 +32,35 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
 
     companion object{
         const val MY_PROFILE_REQUEST_CODE:Int=11
-//        const val CREATE_BOARD_ACTIVITY:Int=12
+        const val CREATE_BOARD_REQUEST_CODE:Int=12
     }
-
-    private var binding:ActivityMainBinding?= null
-
+    private var navViewHeaderBinding : NavHeaderMainBinding?=null
+    private var binding : ActivityMainBinding?= null
+    private lateinit var rv:RecyclerView
+    private lateinit var includedMainContent:ContentMainBinding
     private lateinit var mUserName:String
-
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding=ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding?.root)
+        navViewHeaderBinding =NavHeaderMainBinding.bind(binding?.navView?.getHeaderView(0)!!)
         setUpActionBar()
         binding?.navView?.setNavigationItemSelectedListener(this)
-
-        FireStoreClass().loadUserData(this)
-
-        findViewById<FloatingActionButton>(R.id.fab_create_board) .setOnClickListener{
-            startActivity(Intent(this@MainActivity,CreateBoardActivity::class.java).putExtra(Constants.NAME,mUserName))
+        FireStoreClass().loadUserData(this,true)
+        binding?.includedAppBarMain?.fabCreateBoard?.setOnClickListener {
+            startActivityForResult(Intent(this@MainActivity,CreateBoardActivity::class.java).putExtra(Constants.NAME,mUserName),
+                CREATE_BOARD_REQUEST_CODE)
         }
-
-
     }
 
     private fun setUpActionBar(){
-        var toolbar:Toolbar=findViewById(R.id.toolbar_main_activity)
-        toolbar.setNavigationIcon(R.drawable.ic_action_navigation_menu)
-        toolbar.setTitleTextColor(Color.WHITE)
+        var toolbar=binding?.includedAppBarMain?.toolbarMainActivity
+        toolbar?.setNavigationIcon(R.drawable.ic_action_navigation_menu)
+        toolbar?.setTitleTextColor(Color.WHITE)
         setSupportActionBar(toolbar)
 //        supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_black_color_back_24dp)
-        toolbar.setNavigationOnClickListener {
+        toolbar?.setNavigationOnClickListener {
             toggleDrawer()
         }
     }
@@ -97,15 +102,21 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         return true
     }
 
-    fun updateNavigationUserDetails(user: User) {
+    fun updateNavigationUserDetails(user: User, readBoardList:Boolean) {
         mUserName=user.name
         Glide.with(this)
             .load(user.image)
             .centerCrop()
             .placeholder(R.drawable.ic_user_place_holder)
-            .into(findViewById(R.id.iv_user_image))
+            .into(navViewHeaderBinding?.ivUserImage!!)
+//                findViewById(R.id.iv_user_image))
 
-        findViewById<TextView>(R.id.tv_username).text=user.name
+        navViewHeaderBinding?.tvUsername?.text=user.name
+
+        if(readBoardList){
+            showProgressDialog(resources.getString(R.string.please_wait))
+            FireStoreClass().getBoardList(this)
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -115,10 +126,42 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
                 MY_PROFILE_REQUEST_CODE->{
                     FireStoreClass().loadUserData(this)
                 }
+                CREATE_BOARD_REQUEST_CODE->{
+                    showProgressDialog(resources.getString(R.string.please_wait))
+                    FireStoreClass().getBoardList(this)
+                }
                 else->{
-                    Log.e("Cancelled request","")
+                    Log.e("Cancelled request","Cancelled")
                 }
             }
+        else{
+            Log.e("Cancelled request","Cancelled")
+        }
+    }
+
+    fun populateBoardListToUI(boardList:ArrayList<Board>){
+        hideProgressDialog()
+        includedMainContent= binding?.includedAppBarMain?.includedContentMain!!
+        rv= includedMainContent.rvBoardsList
+        if(boardList.size>0){
+            rv.visibility = View.VISIBLE
+            includedMainContent.tvNoBoardsAvailable.visibility=View.INVISIBLE
+            rv.layoutManager=LinearLayoutManager(this)
+            rv.setHasFixedSize(true)
+            val adapter = BoardItemsAdapter(this,boardList)
+            rv.adapter=adapter
+
+            adapter.setOnClickListener(object : BoardItemsAdapter.OnClickListener{
+                override fun onClick(position: Int, model: Board) {
+                    val  intent=Intent(this@MainActivity,TaskListActivity::class.java)
+                    intent.putExtra(Constants.DOCUMENT_ID,model.documentId)
+                    startActivity(intent)
+                }
+            })
+        }else{
+            rv.visibility = View.INVISIBLE
+            includedMainContent.tvNoBoardsAvailable.visibility=View.VISIBLE
+        }
     }
 
 }

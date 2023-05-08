@@ -56,6 +56,7 @@ class MyProfileActivity : BaseActivity() {
             }
         }
     }
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -71,6 +72,7 @@ class MyProfileActivity : BaseActivity() {
             Toast.makeText(this,"Oops, you just denied the permission for storage. You can got to settings",Toast.LENGTH_LONG).show()
         }
     }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if(resultCode==Activity.RESULT_OK&&requestCode== Constants.PICK_IMAGE_REQUEST_CODE&&data!!.data!=null){
@@ -87,6 +89,7 @@ class MyProfileActivity : BaseActivity() {
             }
         }
     }
+
     fun setUserDataInUI(user: User){
 
         mUserDetails = user
@@ -104,6 +107,7 @@ class MyProfileActivity : BaseActivity() {
         }
         hideProgressDialog()
     }
+
     private fun setUpActionBar(){
         setSupportActionBar(binding?.toolbarMyProfileActivity)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -113,11 +117,10 @@ class MyProfileActivity : BaseActivity() {
             finish()
         }
     }
+
     private fun uploadUserImage(){
         showProgressDialog(resources.getString(R.string.please_wait))
-
         if(mSelectedImageFileUri!=null){
-
             val sRef:StorageReference=
                 FirebaseStorage.getInstance().reference
                     .child("USER_IMAGE"+
@@ -141,6 +144,7 @@ class MyProfileActivity : BaseActivity() {
             }
         }
     }
+
     private fun updateUserProfileData(){
         val userHashMap =HashMap<String,Any>()
 //        var anyChangeMade=false
@@ -158,9 +162,11 @@ class MyProfileActivity : BaseActivity() {
         }
         FireStoreClass().updateUserProfileData(this,userHashMap)
     }
+
     fun profileUpdateSuccess(){
         hideProgressDialog()
     }
+
     override fun onDestroy() {
         super.onDestroy()
         binding=null
