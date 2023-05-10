@@ -5,6 +5,7 @@ import android.util.Log
 import android.widget.Toast
 import com.example.projectmanageapp.activities.CreateBoardActivity
 import com.example.projectmanageapp.activities.MainActivity
+import com.example.projectmanageapp.activities.MembersActivity
 import com.example.projectmanageapp.activities.MyProfileActivity
 import com.example.projectmanageapp.activities.SignInActivity
 import com.example.projectmanageapp.activities.SignUpActivity
@@ -21,14 +22,32 @@ class FireStoreClass {
 
     private val mFireStore = FirebaseFirestore.getInstance()
 
+    fun getAssignedMembersListDetails(activity: MembersActivity, assignedTo: ArrayList<String>) {
+        mFireStore.collection(Constants.USERS)
+            .whereIn(Constants.ID,assignedTo)
+            .get()
+            .addOnSuccessListener {
+                Log.i(activity.javaClass.simpleName,it.documents.toString())
+                val userList:ArrayList<User> =ArrayList<User>()
+                for(i in it.documents){
+                    val user=i.toObject<User>()
+                    userList.add(user!!)
+                }
+                activity.setUpMemberList(userList)
+            }
+            .addOnFailureListener {
+                Log.e(activity.javaClass.simpleName,it.message.toString())
+            }
+    }
+
     fun addUpdateTaskList(activity:TaskListActivity,board: Board){
         val taskListHM=HashMap<String,Any>()
-        taskListHM[Constants.Task_LIST]=board.taskList
+        taskListHM[Constants.TASK_LIST]=board.taskList
         mFireStore.collection(Constants.BOARDS)
             .document(board.documentId)
             .update(taskListHM)
             .addOnSuccessListener {
-                Toast.makeText(activity,"Profile update successfully!",Toast.LENGTH_SHORT).show()
+                Toast.makeText(activity,"Board Updated successfully!",Toast.LENGTH_SHORT).show()
 
                 activity.addUpdateTaskListSuccess()
             }.addOnFailureListener{

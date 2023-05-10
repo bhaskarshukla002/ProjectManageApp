@@ -9,9 +9,14 @@ import com.example.projectmanageapp.R
 import com.example.projectmanageapp.databinding.ItemBoardBinding
 import com.example.projectmanageapp.models.Board
 
-open class BoardItemsAdapter(private val context:Context,
-                                     private var list:ArrayList<Board>):RecyclerView.Adapter<BoardItemsAdapter.ViewHolder>() {
+open class BoardItemsAdapter(
+    private val context:Context,
+    private var list:ArrayList<Board>
+    )
+    :RecyclerView.Adapter<BoardItemsAdapter.ViewHolder>() {
+
     private var onClickListener: OnClickListener?=null
+
     inner class ViewHolder(binding: ItemBoardBinding):RecyclerView.ViewHolder(binding.root){
         val ivBoardImage = binding.ivBoardImage
         val tvName = binding.tvName

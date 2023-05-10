@@ -163,5 +163,9 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
             includedMainContent.tvNoBoardsAvailable.visibility=View.VISIBLE
         }
     }
+    override fun onDestroy() {
+        super.onDestroy()
+        binding=null
+    }
 
 }

@@ -8,17 +8,18 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.projectmanageapp.R
 import com.example.projectmanageapp.activities.TaskListActivity
 import com.example.projectmanageapp.databinding.ItemTaskBinding
-import com.example.projectmanageapp.firebase.FireStoreClass
-import com.example.projectmanageapp.models.Board
 import com.example.projectmanageapp.models.Task
 
-open class TaskListItemsAdapter(private val context: Context,private var list:ArrayList<Task>):RecyclerView.Adapter<TaskListItemsAdapter.ViewHolder>(){
+open class TaskListItemsAdapter(
+    private val context: Context,
+    private var list:ArrayList<Task>
+    ) : RecyclerView.Adapter<TaskListItemsAdapter.ViewHolder>(){
 
-//    private var onClickListener:OnClickListener?=null
+
     inner class ViewHolder(binding: ItemTaskBinding):RecyclerView.ViewHolder(binding.root){
             val binding_=binding
     }
@@ -49,6 +50,7 @@ open class TaskListItemsAdapter(private val context: Context,private var list:Ar
             holder.binding_.tvAddTaskList.visibility= View.GONE
             holder.binding_.cvAddTaskListName.visibility=View.VISIBLE
         }
+
         holder.binding_.ibCloseListName.setOnClickListener{
             holder.binding_.tvAddTaskList.visibility= View.VISIBLE
             holder.binding_.cvAddTaskListName.visibility=View.GONE
@@ -63,15 +65,18 @@ open class TaskListItemsAdapter(private val context: Context,private var list:Ar
                 Toast.makeText(context,"Please Enter TaskList Name",Toast.LENGTH_SHORT).show()
             }
         }
+
         holder.binding_.ibEditListName.setOnClickListener {
             holder.binding_.etEditTaskListName.setText(model.title)
             holder.binding_.llTitleView.visibility=View.GONE
             holder.binding_.cvEditTaskListName.visibility=View.VISIBLE
         }
+
         holder.binding_.ibCloseEditableView.setOnClickListener {
             holder.binding_.llTitleView.visibility=View.VISIBLE
             holder.binding_.cvEditTaskListName.visibility=View.GONE
         }
+
         holder.binding_.ibDoneEditListName.setOnClickListener {
             val listName = holder.binding_.etEditTaskListName.text.toString()
             if(listName.isNotEmpty()) {
@@ -83,9 +88,39 @@ open class TaskListItemsAdapter(private val context: Context,private var list:Ar
                 Toast.makeText(context,"Please Enter List Name.",Toast.LENGTH_SHORT).show()
             }
         }
-        holder.binding_.ibDeleteList.setOnClickListener {
 
+        holder.binding_.ibDeleteList.setOnClickListener {
+            alertDialogForDeleteList(position,model.title)
         }
+
+        holder.binding_.tvAddCard.setOnClickListener {
+            holder.binding_.tvAddCard.visibility=View.GONE
+            holder.binding_.cvAddCard.visibility=View.VISIBLE
+        }
+
+        holder.binding_.ibCloseCardName.setOnClickListener {
+            holder.binding_.tvAddCard.visibility=View.VISIBLE
+            holder.binding_.cvAddCard.visibility=View.GONE
+        }
+
+        holder.binding_.ibDoneCardName.setOnClickListener {
+            val cardName = holder.binding_.etCardName.text.toString()
+            if(cardName.isNotEmpty()) {
+                if(context is TaskListActivity){
+                    context.addCardToTaskList(position,cardName)
+                }
+            }
+            else{
+                Toast.makeText(context,"Please Enter a Card Name.",Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        holder.binding_.rvCardList.layoutManager=LinearLayoutManager(context)
+        holder.binding_.rvCardList.setHasFixedSize(true)
+        holder.binding_.rvCardList.adapter= CardListItemsAdapter(context,model.cards)
+
+
+
     }
 
     private fun alertDialogForDeleteList(position: Int,title:String){
@@ -93,7 +128,18 @@ open class TaskListItemsAdapter(private val context: Context,private var list:Ar
         builder.setTitle("Alert")
         builder.setMessage("Are you sure you want to delete $title.")
         builder.setIcon(android.R.drawable.ic_dialog_alert)
-
+        builder.setPositiveButton("Yes"){ dI , _ ->
+            dI.dismiss()
+            if(context is TaskListActivity){
+                context.deleteTaskList(position)
+            }
+        }
+        builder.setNegativeButton("No"){dI,_->
+            dI.dismiss()
+        }
+        val alertDialog: AlertDialog=builder.create()
+        alertDialog.setCancelable(false)
+        alertDialog.show()
     }
 
     private fun Int.toDp(): Int=

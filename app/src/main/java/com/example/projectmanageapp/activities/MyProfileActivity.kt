@@ -22,7 +22,7 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import java.net.URL
 
-class MyProfileActivity : BaseActivity() {
+class  MyProfileActivity : BaseActivity() {
 
     private var binding:ActivityMyProfileBinding?=null
     private var mSelectedImageFileUri: Uri?=null
